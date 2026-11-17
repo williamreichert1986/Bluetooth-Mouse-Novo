@@ -28,6 +28,9 @@ import java.util.concurrent.Executor
 class MainActivity : ComponentActivity() {
 
     private var hidDevice: BluetoothHidDevice? = null
+
+    private var mouseDevice: android.bluetooth.BluetoothDevice? = null
+    
     private var bluetoothStatus = mutableStateOf("Preparando Bluetooth...")
 
     private val hidCallback = object : BluetoothHidDevice.Callback() {
