@@ -242,20 +242,19 @@ private fun enviarClique(duplo: Boolean = false) {
             "Não foi possível iniciar o serviço HID"
         }
     }
-
-        override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             MouseScreen(
                 status = bluetoothStatus.value,
                 onConnect = { iniciarBluetooth() },
-                onMove = { x, y -> enviarMovimento(x, y) }
+                onMove = { x, y -> enviarMovimento(x, y) },
+                onClick = { enviarClique() },
+                onDoubleClick = { enviarClique(duplo = true) }
             )
         }
     }
-
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -288,9 +287,10 @@ private fun enviarClique(duplo: Boolean = false) {
 fun MouseScreen(
     status: String,
     onConnect: () -> Unit,
-    onMove: (Int, Int) -> Unit
+    onMove: (Int, Int) -> Unit,
+    onClick: () -> Unit,
+    onDoubleClick: () -> Unit
 ) {
-    
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF101820)
@@ -312,7 +312,7 @@ fun MouseScreen(
                 fontSize = 14.sp
             )
 
-                        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -330,6 +330,12 @@ fun MouseScreen(
                                 dragAmount.y.toInt()
                             )
                         }
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { onClick() },
+                            onDoubleTap = { onDoubleClick() }
+                        )
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -339,7 +345,7 @@ fun MouseScreen(
                     fontSize = 22.sp
                 )
             }
-            
+
             Spacer(Modifier.height(12.dp))
 
             Row(
