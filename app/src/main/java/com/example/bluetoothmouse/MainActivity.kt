@@ -33,6 +33,8 @@ class MainActivity : ComponentActivity() {
     private var hidDevice: BluetoothHidDevice? = null
 
     private var mouseDevice: android.bluetooth.BluetoothDevice? = null
+
+    private var sensibilidade = 50
     
     private var bluetoothStatus = mutableStateOf("Preparando Bluetooth...")
 
@@ -130,25 +132,34 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+@SuppressLint("MissingPermission")
+private fun enviarMovimento(x: Int, y: Int) {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
 
-    @SuppressLint("MissingPermission")
-    private fun enviarMovimento(x: Int, y: Int) {
-        val device = mouseDevice ?: return
-        val hid = hidDevice ?: return
+    val fator = sensibilidade / 50f
 
-        hid.sendReport(
-            device,
+    val movimentoX = (x * fator).toInt()
+    val movimentoY = (y * fator).toInt()
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(
             0,
-            byteArrayOf(
-                0,
-                x.coerceIn(-127, 127).toByte(),
-                y.coerceIn(-127, 127).toByte(),
-                0
-            )
+            movimentoX.coerceIn(-127, 127).toByte(),
+            movimentoY.coerceIn(-127, 127).toByte(),
+            0
         )
-    }
+    )
+    
+}
+    
     @SuppressLint("MissingPermission")
-private fun enviarClique(duplo: Boolean = false) {
+private fun enviarClique(
+    duplo: Boolean = false,
+    botao: Int = 1
+) {
     val device = mouseDevice ?: return
     val hid = hidDevice ?: return
 
@@ -166,14 +177,14 @@ private fun enviarClique(duplo: Boolean = false) {
         }
     }
 
-    report(1)
+    report(botao)
 
     handler.postDelayed({
         report(0)
 
         if (duplo) {
             handler.postDelayed({
-                report(1)
+                report(botao)
 
                 handler.postDelayed({
                     report(0)
@@ -242,19 +253,31 @@ private fun enviarClique(duplo: Boolean = false) {
             "Não foi possível iniciar o serviço HID"
         }
     }
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+       override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-        setContent {
-            MouseScreen(
-                status = bluetoothStatus.value,
-                onConnect = { iniciarBluetooth() },
-                onMove = { x, y -> enviarMovimento(x, y) },
-                onClick = { enviarClique() },
-                onDoubleClick = { enviarClique(duplo = true) }
-            )
-        }
+    setContent {
+        MouseScreen(
+            status = bluetoothStatus.value,
+            sensibilidade = sensibilidade,
+            onSensibilidadeChange = { sensibilidade = it },
+            onMove = { x, y -> enviarMovimento(x, y) },
+            onClick = { enviarClique() },
+            onDoubleClick = { enviarClique(duplo = true) },
+            onRightClick = { enviarClique(botao = 2) },
+            onRightDoubleClick = {
+                enviarClique(duplo = true, botao = 2)
+            }
+        )
     }
+        iniciarBluetooth()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -286,10 +309,13 @@ private fun enviarClique(duplo: Boolean = false) {
 @Composable
 fun MouseScreen(
     status: String,
-    onConnect: () -> Unit,
+    sensibilidade: Int,
+    onSensibilidadeChange: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
-    onClick: () -> Unit,
-    onDoubleClick: () -> Unit
+        onClick: () -> Unit,
+    onDoubleClick: () -> Unit,
+    onRightClick: () -> Unit,
+    onRightDoubleClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -306,81 +332,85 @@ fun MouseScreen(
                 fontSize = 21.sp
             )
 
-            Text(
-                status,
-                color = Color(0xFF80CBC4),
-                fontSize = 14.sp
-            )
+           Text(
+    status,
+    color = Color(0xFF80CBC4),
+    fontSize = 14.sp
+)
 
-            Spacer(Modifier.height(12.dp))
+Spacer(Modifier.height(8.dp))
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(
-                        Color(0xFF263746),
-                        RoundedCornerShape(18.dp)
-                    )
-                    .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            onMove(
-                                dragAmount.x.toInt(),
-                                dragAmount.y.toInt()
-                            )
-                        }
-                    }
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { onClick() },
-                            onDoubleTap = { onDoubleClick() }
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "ÁREA DO TOUCHPAD",
-                    color = Color.White,
-                    fontSize = 22.sp
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+) {
+    Text(
+        "SENSIBILIDADE",
+        color = Color.White,
+        fontSize = 14.sp
+    )
+
+    Text(
+        "$sensibilidade / 100",
+        color = Color(0xFF80CBC4),
+        fontSize = 16.sp
+    )
+}
+
+Slider(
+    value = sensibilidade.toFloat(),
+    onValueChange = {
+        onSensibilidadeChange(it.toInt())
+    },
+    valueRange = 1f..100f
+)
+
+Spacer(Modifier.height(8.dp))
+
+           Box(
+    modifier = Modifier
+        .weight(1f)
+        .fillMaxWidth()
+        .background(
+            Color(0xFF263746),
+            RoundedCornerShape(18.dp)
+        )
+        .pointerInput(Unit) {
+            detectDragGestures { change, dragAmount ->
+                change.consume()
+                onMove(
+                    dragAmount.x.toInt(),
+                    dragAmount.y.toInt()
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(76.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
-                    Text("CLIQUE DIREITO")
+        }
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onTap = { ponto ->
+                    if (ponto.x < size.width / 2f) {
+                        onClick()
+                    } else {
+                        onRightClick()
+                    }
+                },
+                onDoubleTap = { ponto ->
+                    if (ponto.x < size.width / 2f) {
+                        onDoubleClick()
+                    } else {
+                        onRightDoubleClick()
+                    }
                 }
-
-                Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
-                    Text("CLIQUE ESQUERDO")
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            Button(
-                onClick = onConnect,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("INICIAR BLUETOOTH HID")
-            }
+            )
+        },
+    contentAlignment = Alignment.Center
+) {
+    Text(
+        "ÁREA DO TOUCHPAD",
+        color = Color.White,
+        fontSize = 22.sp
+    )
+         }
         }
     }
 }
