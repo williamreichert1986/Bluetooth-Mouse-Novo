@@ -48,23 +48,24 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onConnectionStateChanged(
-            device: android.bluetooth.BluetoothDevice?,
-            state: Int
-        ) {
-            runOnUiThread {
-                mouseDevice = if (state == BluetoothProfile.STATE_CONNECTED) {
-    device
-} else {
-    null
-                }
-                bluetoothStatus.value = when (state) {
-                    BluetoothProfile.STATE_CONNECTED -> "Mouse conectado"
-                    BluetoothProfile.STATE_CONNECTING -> "Conectando..."
-                    BluetoothProfile.STATE_DISCONNECTED -> "Bluetooth desconectado"
-                    else -> "Estado Bluetooth: $state"
-                }
-            }
+    device: android.bluetooth.BluetoothDevice?,
+    state: Int
+) {
+    runOnUiThread {
+        mouseDevice = if (state == BluetoothProfile.STATE_CONNECTED) {
+            device
+        } else {
+            null
         }
+
+        bluetoothStatus.value = when (state) {
+            BluetoothProfile.STATE_CONNECTED -> "Mouse conectado"
+            BluetoothProfile.STATE_CONNECTING -> "Conectando..."
+            BluetoothProfile.STATE_DISCONNECTED -> "Bluetooth desconectado"
+            else -> "Estado Bluetooth: $state"
+        }
+    }
+}
     }
 
     private val profileListener = object : BluetoothProfile.ServiceListener {
