@@ -129,6 +129,23 @@ class MainActivity : ComponentActivity() {
 
 
     @SuppressLint("MissingPermission")
+    private fun enviarMovimento(x: Int, y: Int) {
+        val device = mouseDevice ?: return
+        val hid = hidDevice ?: return
+
+        hid.sendReport(
+            device,
+            0,
+            byteArrayOf(
+                0,
+                x.coerceIn(-127, 127).toByte(),
+                y.coerceIn(-127, 127).toByte(),
+                0
+            )
+        )
+    }
+    
+    @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
             val connectPermission =
