@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.concurrent.Executor
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 class MainActivity : ComponentActivity() {
 
@@ -205,14 +207,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
+        override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MouseScreen(bluetoothStatus.value) {
-                iniciarBluetooth()
-            }
+            MouseScreen(
+                status = bluetoothStatus.value,
+                onConnect = { iniciarBluetooth() },
+                onMove = { x, y -> enviarMovimento(x, y) }
+            )
         }
     }
 
@@ -248,8 +251,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MouseScreen(
     status: String,
-    onConnect: () -> Unit
+    onConnect: () -> Unit,
+    onMove: (Int, Int) -> Unit
 ) {
+    
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF101820)
@@ -271,7 +276,7 @@ fun MouseScreen(
                 fontSize = 14.sp
             )
 
-            Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -280,7 +285,16 @@ fun MouseScreen(
                     .background(
                         Color(0xFF263746),
                         RoundedCornerShape(18.dp)
-                    ),
+                    )
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            onMove(
+                                dragAmount.x.toInt(),
+                                dragAmount.y.toInt()
+                            )
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -289,7 +303,7 @@ fun MouseScreen(
                     fontSize = 22.sp
                 )
             }
-
+            
             Spacer(Modifier.height(12.dp))
 
             Row(
