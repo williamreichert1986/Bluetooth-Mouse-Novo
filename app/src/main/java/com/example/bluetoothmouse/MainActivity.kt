@@ -52,6 +52,11 @@ class MainActivity : ComponentActivity() {
             state: Int
         ) {
             runOnUiThread {
+                mouseDevice = if (state == BluetoothProfile.STATE_CONNECTED) {
+    device
+} else {
+    null
+                }
                 bluetoothStatus.value = when (state) {
                     BluetoothProfile.STATE_CONNECTED -> "Mouse conectado"
                     BluetoothProfile.STATE_CONNECTING -> "Conectando..."
