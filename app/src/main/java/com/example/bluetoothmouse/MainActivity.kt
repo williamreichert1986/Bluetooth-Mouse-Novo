@@ -118,23 +118,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
-        if (Build.VERSION.SDK_INT >= 31 &&
-            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(
-                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-                100
-            )
-            return
+        if (Build.VERSION.SDK_INT >= 31) {
+            val connectPermission =
+                Manifest.permission.BLUETOOTH_CONNECT
+            val advertisePermission =
+                Manifest.permission.BLUETOOTH_ADVERTISE
+
+            if (checkSelfPermission(connectPermission) !=
+                PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(advertisePermission) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(
+                    arrayOf(
+                        connectPermission,
+                        advertisePermission
+                    ),
+                    100
+                )
+                return
+            }
         }
 
         val adapter = BluetoothAdapter.getDefaultAdapter()
 
         if (adapter == null) {
-            bluetoothStatus.value = "Este aparelho não possui Bluetooth"
+            bluetoothStatus.value = "Bluetooth não disponível"
             return
         }
 
@@ -143,6 +155,17 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        val discoverableIntent = android.content.Intent(
+            BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE
+        ).apply {
+            putExtra(
+                BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION,
+                300
+            )
+        }
+
+        startActivity(discoverableIntent)
+
         val sucesso = adapter.getProfileProxy(
             this,
             profileListener,
@@ -150,11 +173,12 @@ class MainActivity : ComponentActivity() {
         )
 
         bluetoothStatus.value = if (sucesso) {
-            "Solicitando serviço Bluetooth HID..."
+            "Ativando Bluetooth HID e visibilidade..."
         } else {
             "Não foi possível iniciar o serviço HID"
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
