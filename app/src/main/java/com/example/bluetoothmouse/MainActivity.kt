@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import java.util.concurrent.Executor
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 
 class MainActivity : ComponentActivity() {
 
@@ -146,6 +147,41 @@ class MainActivity : ComponentActivity() {
             )
         )
     }
+    @SuppressLint("MissingPermission")
+private fun enviarClique(duplo: Boolean = false) {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    val handler = android.os.Handler(
+        android.os.Looper.getMainLooper()
+    )
+
+    fun report(button: Int) {
+        if (mouseDevice == device && hidDevice === hid) {
+            hid.sendReport(
+                device,
+                0,
+                byteArrayOf(button.toByte(), 0, 0, 0)
+            )
+        }
+    }
+
+    report(1)
+
+    handler.postDelayed({
+        report(0)
+
+        if (duplo) {
+            handler.postDelayed({
+                report(1)
+
+                handler.postDelayed({
+                    report(0)
+                }, 60)
+            }, 120)
+        }
+    }, 60)
+}
     
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
