@@ -253,8 +253,9 @@ private fun enviarClique(
             "Não foi possível iniciar o serviço HID"
         }
     }
-       override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
     setContent {
         MouseScreen(
@@ -270,15 +271,11 @@ private fun enviarClique(
             }
         )
     }
-        iniciarBluetooth()
-    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-    override fun onRequestPermissionsResult(
+    iniciarBluetooth()
+}
+
+override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
         grantResults: IntArray
@@ -312,7 +309,7 @@ fun MouseScreen(
     sensibilidade: Int,
     onSensibilidadeChange: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
-        onClick: () -> Unit,
+    onClick: () -> Unit,
     onDoubleClick: () -> Unit,
     onRightClick: () -> Unit,
     onRightDoubleClick: () -> Unit
