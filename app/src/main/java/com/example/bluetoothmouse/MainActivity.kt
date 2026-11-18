@@ -363,18 +363,9 @@ Row(
     modifier = Modifier.fillMaxWidth(),
     verticalAlignment = Alignment.CenterVertically
 ) {
-    Text(
-        "BLUETOOTH MOUSE",
-        color = Color.White,
-        fontSize = 15.sp
-    )
-
+   
     Spacer(Modifier.weight(1f))
 
-    Text(
-        status,
-        color = Color(0xFF80CBC4),
-        fontSize = 15.sp
     )
 }
 
