@@ -358,16 +358,8 @@ SideEffect {
 )
 
 Spacer(Modifier.height(8.dp))
-
-Row(
-    modifier = Modifier.fillMaxWidth(),
-    verticalAlignment = Alignment.CenterVertically
-) {
-   
+  
     Spacer(Modifier.weight(1f))
-
-    )
-}
 
 Slider(
     value = sensibilidade.toFloat(),
