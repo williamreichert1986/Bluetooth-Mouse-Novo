@@ -379,11 +379,16 @@ SideEffect {
         color = Color(0xFF101820)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {  
-Slider(
+    modifier = Modifier
+        .fillMaxSize()
+        .padding(12.dp)
+) {
+    Text(
+        text = status,
+        color = Color.White
+    )
+
+    Slider(
     value = sensibilidade.toFloat(),
     onValueChange = {
         onSensibilidadeChange(it.toInt())
