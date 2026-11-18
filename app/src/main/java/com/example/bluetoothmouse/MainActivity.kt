@@ -34,6 +34,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.positionChange
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
 
@@ -393,6 +394,7 @@ SideEffect {
 Spacer(Modifier.height(8.dp))
 
          
+
 Box(
     modifier = Modifier
         .weight(1f)
@@ -407,7 +409,9 @@ Box(
                     requireUnconsumed = false
                 )
 
+                val posicaoInicial = primeiroDedo.position.x
                 var arrastando = false
+                var houveMovimento = false
 
                 try {
                     while (true) {
@@ -439,15 +443,16 @@ Box(
                                 segundo.consume()
                             }
                         } else {
-                            if (arrastando) break
-
                             val movimento = primeiro.positionChange()
 
                             if (movimento != Offset.Zero) {
+                                houveMovimento = true
+
                                 onMove(
                                     movimento.x.toInt(),
                                     movimento.y.toInt()
                                 )
+
                                 primeiro.consume()
                             }
                         }
@@ -457,25 +462,49 @@ Box(
                         onReleaseLeft()
                     }
                 }
-            }
-        }
-        .pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { ponto ->
-                    if (ponto.x < size.width * 0.75f) {
-                        onClick()
-                    } else {
+
+                if (!houveMovimento && !arrastando) {
+                    if (posicaoInicial >= size.width * 0.75f) {
                         onRightClick()
-                    }
-                },
-                onDoubleTap = { ponto ->
-                    if (ponto.x < size.width * 0.75f) {
-                        onDoubleClick()
                     } else {
-                        onRightDoubleClick()
+                        val segundoToque = withTimeoutOrNull(500L) {
+                            awaitFirstDown(requireUnconsumed = false)
+                        }
+
+                        if (segundoToque == null) {
+                            onClick()
+                        } else {
+                            val segundaPosicao = segundoToque.position.x
+                            var segundoMoveu = false
+
+                            while (true) {
+                                val evento = awaitPointerEvent()
+                                val dedo = evento.changes.firstOrNull {
+                                    it.id == segundoToque.id
+                                }
+
+                                if (dedo?.pressed != true) break
+
+                                if (dedo.positionChange() != Offset.Zero) {
+                                    segundoMoveu = true
+                                }
+                            }
+
+                            if (!segundoMoveu &&
+                                segundaPosicao < size.width * 0.75f
+                            ) {
+                                onDoubleClick()
+                            } else {
+                                onClick()
+
+                                if (segundaPosicao >= size.width * 0.75f) {
+                                    onRightClick()
+                                }
+                            }
+                        }
                     }
                 }
-            )
+            }
         }
 )
 
