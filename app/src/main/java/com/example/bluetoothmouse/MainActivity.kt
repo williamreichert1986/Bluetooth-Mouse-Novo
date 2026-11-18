@@ -259,17 +259,23 @@ private fun enviarClique(
 
     setContent {
         MouseScreen(
-            status = bluetoothStatus.value,
-            sensibilidade = sensibilidade.intValue,
-            onSensibilidadeChange = { sensibilidade.intValue = it },
-            onMove = { x, y -> enviarMovimento(x, y) },
-            onClick = { enviarClique() },
-            onDoubleClick = { enviarClique(duplo = true) },
-            onRightClick = { enviarClique(botao = 2) },
-            onRightDoubleClick = {
-                enviarClique(duplo = true, botao = 2)
-            }
-        )
+    status = bluetoothStatus.value,
+    sensibilidade = sensibilidade.intValue,
+    onSensibilidadeChange = { sensibilidade.intValue = it },
+    onMove = { x, y -> enviarMovimento(x, y) },
+    onClick = { enviarClique() },
+    onDoubleClick = { enviarClique(duplo = true) },
+    onRightClick = { enviarClique(botao = 2) },
+    onRightDoubleClick = {
+        enviarClique(duplo = true, botao = 2)
+    },
+    onBottomLeftClick = {
+        enviarClique()
+    },
+    onBottomRightClick = {
+        enviarClique(botao = 2)
+    }
+)
     }
 
     iniciarBluetooth()
@@ -311,9 +317,14 @@ fun MouseScreen(
     onMove: (Int, Int) -> Unit,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
-    onRightClick: () -> Unit,
-    onRightDoubleClick: () -> Unit
+        onRightClick: () -> Unit,
+    onRightDoubleClick: () -> Unit,
+    onBottomLeftClick: () -> Unit,
+    onBottomRightClick: () -> Unit
 ) {
+
+    var botoesInvertidos by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF101820)
@@ -406,7 +417,69 @@ Spacer(Modifier.height(8.dp))
         "ÁREA DO TOUCHPAD",
         color = Color.White,
         fontSize = 22.sp
-    )
+        )
+}
+
+// BOTÕES INFERIORES
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 10.dp),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalAlignment = Alignment.CenterVertically
+) {
+    Surface(
+        onClick = {
+            if (botoesInvertidos) {
+                onBottomRightClick()
+            } else {
+                onBottomLeftClick()
+            }
+        },
+        modifier = Modifier
+            .weight(1f)
+            .height(56.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = Color(0xFF405565)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text("ESQUERDO", color = Color.White)
+        }
+    }
+
+    Surface(
+        onClick = {
+            botoesInvertidos = !botoesInvertidos
+        },
+        modifier = Modifier
+            .weight(0.5f)
+            .height(28.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFF80CBC4)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text("⇄", color = Color.Black)
+        }
+    }
+
+    Surface(
+        onClick = {
+            if (botoesInvertidos) {
+                onBottomLeftClick()
+            } else {
+                onBottomRightClick()
+            }
+        },
+        modifier = Modifier
+            .weight(1f)
+            .height(56.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = Color(0xFF405565)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text("DIREITO", color = Color.White)
+        }
+    }
 }
 }
 }
