@@ -271,17 +271,6 @@ private fun soltarEsquerdo() {
             return
         }
 
-        val discoverableIntent = android.content.Intent(
-            BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE
-        ).apply {
-            putExtra(
-                BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION,
-                300
-            )
-        }
-
-        startActivity(discoverableIntent)
-
         val sucesso = adapter.getProfileProxy(
             this,
             profileListener,
