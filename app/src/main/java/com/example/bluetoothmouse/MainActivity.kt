@@ -361,19 +361,20 @@ Spacer(Modifier.height(8.dp))
 
 Row(
     modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically
 ) {
     Text(
-        "SENSIBILIDADE",
+        "BLUETOOTH MOUSE",
         color = Color.White,
-        fontSize = 14.sp
+        fontSize = 15.sp
     )
 
+    Spacer(Modifier.weight(1f))
+
     Text(
-        "$sensibilidade / 100",
+        status,
         color = Color(0xFF80CBC4),
-        fontSize = 16.sp
+        fontSize = 15.sp
     )
 }
 
