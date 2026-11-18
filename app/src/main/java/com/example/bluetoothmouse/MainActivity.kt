@@ -365,7 +365,7 @@ Slider(
 
 Spacer(Modifier.height(8.dp))
 
-           Box(
+          Box(
     modifier = Modifier
         .weight(1f)
         .fillMaxWidth()
@@ -385,14 +385,14 @@ Spacer(Modifier.height(8.dp))
         .pointerInput(Unit) {
             detectTapGestures(
                 onTap = { ponto ->
-                    if (ponto.x < size.width / 2f) {
+                    if (ponto.x < size.width * 0.75f) {
                         onClick()
                     } else {
                         onRightClick()
                     }
                 },
                 onDoubleTap = { ponto ->
-                    if (ponto.x < size.width / 2f) {
+                    if (ponto.x < size.width * 0.75f) {
                         onDoubleClick()
                     } else {
                         onRightDoubleClick()
@@ -407,7 +407,7 @@ Spacer(Modifier.height(8.dp))
         color = Color.White,
         fontSize = 22.sp
     )
-         }
-        }
-    }
+}
+}
+}
 }
