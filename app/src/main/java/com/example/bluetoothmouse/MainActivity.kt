@@ -124,7 +124,11 @@ private val sensibilidade = mutableIntStateOf(50)
             descriptor
         )
 
-        val executor = Executor { command -> command.run() }
+        val executor = Executor { command ->
+    runOnUiThread {
+        command.run()
+    }
+}
 
         val registered = hidDevice?.registerApp(
             settings,
