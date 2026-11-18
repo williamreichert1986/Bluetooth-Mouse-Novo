@@ -345,7 +345,7 @@ SideEffect {
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            Text(
+             Text(
                 "BLUETOOTH MOUSE",
                 color = Color.White,
                 fontSize = 21.sp
