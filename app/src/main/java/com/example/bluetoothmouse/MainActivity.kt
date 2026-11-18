@@ -30,12 +30,18 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import android.view.View
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.positionChange
 
 class MainActivity : ComponentActivity() {
 
     private var hidDevice: BluetoothHidDevice? = null
 
     private var mouseDevice: android.bluetooth.BluetoothDevice? = null
+
+private var botoesPressionados = 0
 
 private val sensibilidade = mutableIntStateOf(50)
     
@@ -149,7 +155,7 @@ val fator = sensibilidade.intValue / 50f
         device,
         0,
         byteArrayOf(
-            0,
+            botoesPressionados.toByte(),
             movimentoX.coerceIn(-127, 127).toByte(),
             movimentoY.coerceIn(-127, 127).toByte(),
             0
@@ -196,7 +202,35 @@ private fun enviarClique(
         }
     }, 60)
 }
-    
+
+@SuppressLint("MissingPermission")
+private fun pressionarEsquerdo() {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    botoesPressionados = botoesPressionados or 1
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
+
+@SuppressLint("MissingPermission")
+private fun soltarEsquerdo() {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    botoesPressionados = botoesPressionados and 0xFE
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
+
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
@@ -266,6 +300,8 @@ private fun enviarClique(
     sensibilidade = sensibilidade.intValue,
     onSensibilidadeChange = { sensibilidade.intValue = it },
     onMove = { x, y -> enviarMovimento(x, y) },
+    onPressLeft = { pressionarEsquerdo() },
+    onReleaseLeft = { soltarEsquerdo() },
     onClick = { enviarClique() },
     onDoubleClick = { enviarClique(duplo = true) },
     onRightClick = { enviarClique(botao = 2) },
@@ -318,9 +354,11 @@ fun MouseScreen(
     sensibilidade: Int,
     onSensibilidadeChange: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
+    onPressLeft: () -> Unit,
+    onReleaseLeft: () -> Unit,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
-        onRightClick: () -> Unit,
+    onRightClick: () -> Unit,
     onRightDoubleClick: () -> Unit,
     onBottomLeftClick: () -> Unit,
     onBottomRightClick: () -> Unit
@@ -356,7 +394,8 @@ Slider(
 
 Spacer(Modifier.height(8.dp))
 
-          Box(
+         
+Box(
     modifier = Modifier
         .weight(1f)
         .fillMaxWidth()
@@ -365,12 +404,61 @@ Spacer(Modifier.height(8.dp))
             RoundedCornerShape(18.dp)
         )
         .pointerInput(Unit) {
-            detectDragGestures { change, dragAmount ->
-                change.consume()
-                onMove(
-                    dragAmount.x.toInt(),
-                    dragAmount.y.toInt()
+            awaitEachGesture {
+                val primeiroDedo = awaitFirstDown(
+                    requireUnconsumed = false
                 )
+
+                var arrastando = false
+
+                try {
+                    while (true) {
+                        val evento = awaitPointerEvent()
+
+                        val primeiro = evento.changes.firstOrNull {
+                            it.id == primeiroDedo.id
+                        }
+
+                        val segundo = evento.changes.firstOrNull {
+                            it.id != primeiroDedo.id && it.pressed
+                        }
+
+                        if (primeiro?.pressed != true) break
+
+                        if (segundo != null) {
+                            if (!arrastando) {
+                                onPressLeft()
+                                arrastando = true
+                            }
+
+                            val movimento = segundo.positionChange()
+
+                            if (movimento != Offset.Zero) {
+                                onMove(
+                                    movimento.x.toInt(),
+                                    movimento.y.toInt()
+                                )
+                                segundo.consume()
+                            }
+                        } else {
+                            if (arrastando) break
+
+                            val movimento = primeiro.positionChange()
+
+                            if (movimento != Offset.Zero) {
+                                onMove(
+                                    movimento.x.toInt(),
+                                    movimento.y.toInt()
+                                )
+                                primeiro.consume()
+                            }
+                        }
+                    }
+                } finally {
+                    if (arrastando) {
+                        onReleaseLeft()
+                    }
+                }
             }
         }
         .pointerInput(Unit) {
@@ -393,8 +481,8 @@ Spacer(Modifier.height(8.dp))
         }
 )
 
-
 // BOTÕES INFERIORES
+
 Row(
     modifier = Modifier
         .fillMaxWidth()
