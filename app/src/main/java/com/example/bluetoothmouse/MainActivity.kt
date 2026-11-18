@@ -29,6 +29,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import android.view.View
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.clickable
 
 class MainActivity : ComponentActivity() {
 
@@ -431,6 +432,7 @@ Spacer(Modifier.height(8.dp))
         )
 }
 
+
 // BOTÕES INFERIORES
 Row(
     modifier = Modifier
@@ -440,16 +442,16 @@ Row(
     verticalAlignment = Alignment.CenterVertically
 ) {
     Surface(
-        onClick = {
-            if (botoesInvertidos) {
-                onBottomRightClick()
-            } else {
-                onBottomLeftClick()
-            }
-        },
         modifier = Modifier
             .weight(1f)
             .height(67.dp)
+            .clickable {
+                if (botoesInvertidos) {
+                    onBottomRightClick()
+                } else {
+                    onBottomLeftClick()
+                }
+            },
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
     ) {
@@ -459,12 +461,12 @@ Row(
     }
 
     Surface(
-        onClick = {
-            botoesInvertidos = !botoesInvertidos
-        },
         modifier = Modifier
             .weight(0.5f)
             .height(34.dp)
+            .clickable {
+                botoesInvertidos = !botoesInvertidos
+            },
         shape = RoundedCornerShape(8.dp),
         color = Color(0xFF80CBC4)
     ) {
@@ -474,16 +476,16 @@ Row(
     }
 
     Surface(
-        onClick = {
-            if (botoesInvertidos) {
-                onBottomLeftClick()
-            } else {
-                onBottomRightClick()
-            }
-        },
         modifier = Modifier
             .weight(1f)
             .height(67.dp)
+            .clickable {
+                if (botoesInvertidos) {
+                    onBottomLeftClick()
+                } else {
+                    onBottomRightClick()
+                }
+            },
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
     ) {
@@ -492,6 +494,5 @@ Row(
         }
     }
 }
-}
-}
+
 }
