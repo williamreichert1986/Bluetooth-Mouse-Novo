@@ -344,23 +344,7 @@ SideEffect {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp)
-        ) {
-             Text(
-                "BLUETOOTH MOUSE",
-                color = Color.White,
-                fontSize = 21.sp
-            )
-
-           Text(
-    status,
-    color = Color(0xFF80CBC4),
-    fontSize = 14.sp
-)
-
-Spacer(Modifier.height(8.dp))
-  
-    Spacer(Modifier.weight(1f))
-
+        ) {  
 Slider(
     value = sensibilidade.toFloat(),
     onValueChange = {
@@ -406,15 +390,8 @@ Spacer(Modifier.height(8.dp))
                     }
                 }
             )
-        },
-    contentAlignment = Alignment.Center
-) {
-    Text(
-        "ÁREA DO TOUCHPAD",
-        color = Color.White,
-        fontSize = 22.sp
-        )
-}
+        }
+)
 
 
 // BOTÕES INFERIORES
