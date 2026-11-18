@@ -260,8 +260,8 @@ private fun enviarClique(
     setContent {
         MouseScreen(
             status = bluetoothStatus.value,
-            sensibilidade = sensibilidade,
-            onSensibilidadeChange = { sensibilidade = it },
+            sensibilidade = sensibilidade.intValue,
+            onSensibilidadeChange = { sensibilidade.intValue = it },
             onMove = { x, y -> enviarMovimento(x, y) },
             onClick = { enviarClique() },
             onDoubleClick = { enviarClique(duplo = true) },
