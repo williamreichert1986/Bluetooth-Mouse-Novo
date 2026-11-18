@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
     private var mouseDevice: android.bluetooth.BluetoothDevice? = null
 
-    private var sensibilidade = 50
+private val sensibilidade = mutableIntStateOf(50)
     
     private var bluetoothStatus = mutableStateOf("Preparando Bluetooth...")
 
@@ -137,7 +137,7 @@ private fun enviarMovimento(x: Int, y: Int) {
     val device = mouseDevice ?: return
     val hid = hidDevice ?: return
 
-    val fator = sensibilidade / 50f
+val fator = sensibilidade.intValue / 50f
 
     val movimentoX = (x * fator).toInt()
     val movimentoY = (y * fator).toInt()
