@@ -27,6 +27,8 @@ import java.util.concurrent.Executor
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
+import android.view.View
+import androidx.compose.ui.platform.LocalView
 
 class MainActivity : ComponentActivity() {
 
@@ -324,6 +326,14 @@ fun MouseScreen(
 ) {
 
     var botoesInvertidos by remember { mutableStateOf(false) }
+    val view = LocalView.current
+
+SideEffect {
+    view.systemUiVisibility =
+        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+}
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -371,7 +381,8 @@ Slider(
     onValueChange = {
         onSensibilidadeChange(it.toInt())
     },
-    valueRange = 1f..100f
+    valueRange = 1f..100f,
+    modifier = Modifier.height(28.dp)
 )
 
 Spacer(Modifier.height(8.dp))
@@ -438,7 +449,7 @@ Row(
         },
         modifier = Modifier
             .weight(1f)
-            .height(56.dp),
+            .height(67.dp)
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
     ) {
@@ -453,7 +464,7 @@ Row(
         },
         modifier = Modifier
             .weight(0.5f)
-            .height(28.dp),
+            .height(34.dp)
         shape = RoundedCornerShape(8.dp),
         color = Color(0xFF80CBC4)
     ) {
@@ -472,7 +483,7 @@ Row(
         },
         modifier = Modifier
             .weight(1f)
-            .height(56.dp),
+            .height(67.dp)
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
     ) {
