@@ -253,6 +253,20 @@ private fun soltarDireito() {
 }
 
 @SuppressLint("MissingPermission")
+private fun pressionarDireito() {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    botoesPressionados = botoesPressionados or 0x02
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
+
+@SuppressLint("MissingPermission")
 private fun carregarDispositivosPareados() {
 
     val adapter = BluetoothAdapter.getDefaultAdapter()
