@@ -508,6 +508,7 @@ Box(
         }
 )
 
+
 // BOTÕES INFERIORES
 
 Row(
@@ -536,18 +537,39 @@ Row(
         }
     }
 
-    Surface(
-        modifier = Modifier
-            .weight(0.5f)
-            .height(34.dp)
-            .clickable {
-                botoesInvertidos = !botoesInvertidos
-            },
-        shape = RoundedCornerShape(8.dp),
-        color = Color(0xFF80CBC4)
+    Column(
+        modifier = Modifier.weight(0.5f),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text("⇄", color = Color.Black)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .clickable {
+                    // Ação do teclado será adicionada depois
+                },
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF80CBC4)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("⌨", color = Color.Black)
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .clickable {
+                    botoesInvertidos = !botoesInvertidos
+                },
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF80CBC4)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text("⇄", color = Color.Black)
+            }
         }
     }
 
@@ -569,7 +591,4 @@ Row(
             Text("DIREITO", color = Color.White)
         }
     }
-}
-}
-}
 }
