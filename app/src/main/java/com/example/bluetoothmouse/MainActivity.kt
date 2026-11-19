@@ -190,16 +190,15 @@ val movimentoY = movimentoAcumuladoY.toInt()
 movimentoAcumuladoX -= movimentoX
 movimentoAcumuladoY -= movimentoY
 
-    hid.sendReport(
-        device,
-        1,
-        byteArrayOf(
-            botoesPressionados.toByte(),
-            movimentoX.coerceIn(-127, 127).toByte(),
-            movimentoY.coerceIn(-127, 127).toByte(),
-            0
-        )
+  hid.sendReport(
+    device,
+    1,
+    byteArrayOf(
+        botoesPressionados.toByte(),
+        movimentoX.coerceIn(-127, 127).toByte(),
+        movimentoY.coerceIn(-127, 127).toByte()
     )
+)
     
 }
     
