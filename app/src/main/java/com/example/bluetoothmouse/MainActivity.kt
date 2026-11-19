@@ -582,6 +582,9 @@ dispositivosPareados: List<android.bluetooth.BluetoothDevice>
 
     var botoesInvertidos by remember { mutableStateOf(false) }
     var mostrarDispositivos by remember { mutableStateOf(false) }
+    var mostrarTeclado by remember { mutableStateOf(false) }
+    var textoDigitado by remember { mutableStateOf("") }
+    
     val view = LocalView.current
 
 SideEffect {
