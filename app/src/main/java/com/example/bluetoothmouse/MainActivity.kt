@@ -50,7 +50,11 @@ class MainActivity : ComponentActivity() {
 
     private var botoesPressionados = 0
 
-    private val sensibilidade = mutableIntStateOf(50)
+// Acumuladores de movimento do mouse
+private var movimentoAcumuladoX = 0f
+private var movimentoAcumuladoY = 0f
+
+private val sensibilidade = mutableIntStateOf(50)
 
     private var bluetoothStatus = mutableStateOf("Preparando Bluetooth...")
 
@@ -177,8 +181,8 @@ private fun enviarMovimento(x: Int, y: Int) {
 
 val fator = sensibilidade.intValue / 50f
 
-    val movimentoX = (x * fator).toInt()
-    val movimentoY = (y * fator).toInt()
+val movimentoX = (x * fator).toInt()
+val movimentoY = (y * fator).toInt()
 
     hid.sendReport(
         device,
