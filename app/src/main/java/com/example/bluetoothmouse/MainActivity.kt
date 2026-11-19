@@ -206,7 +206,7 @@ private fun enviarClique(
         if (mouseDevice == device && hidDevice === hid) {
             hid.sendReport(
                 device,
-                0,
+                1,
                 byteArrayOf(button.toByte(), 0, 0, 0)
             )
         }
