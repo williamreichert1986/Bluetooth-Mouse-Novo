@@ -104,50 +104,68 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun registrarMouse() {
-        val descriptor = byteArrayOf(
-            0x05, 0x01, 0x09, 0x02, 0xA1.toByte(), 0x01,
-            0x09, 0x01, 0xA1.toByte(), 0x00,
-            0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
-            0x15, 0x00, 0x25, 0x01, 0x95.toByte(), 0x03,
-            0x75, 0x01, 0x81.toByte(), 0x02,
-            0x95.toByte(), 0x01, 0x75, 0x05,
-            0x81.toByte(), 0x01,
-            0x05, 0x01, 0x09, 0x30, 0x09, 0x31,
-            0x09, 0x38, 0x15, 0x81.toByte(), 0x25, 0x7F,
-            0x75, 0x08, 0x95.toByte(), 0x03,
-            0x81.toByte(), 0x06, 0xC0.toByte(), 0xC0.toByte()
-        )
+    
+@SuppressLint("MissingPermission")
+private fun registrarMouse() {
+    val descriptor = byteArrayOf(
+        // MOUSE - RELATÓRIO 1
+        0x05, 0x01, 0x09, 0x02, 0xA1.toByte(), 0x01,
+        0x85.toByte(), 0x01,
+        0x09, 0x01, 0xA1.toByte(), 0x00,
+        0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
+        0x15, 0x00, 0x25, 0x01, 0x95.toByte(), 0x03,
+        0x75, 0x01, 0x81.toByte(), 0x02,
+        0x95.toByte(), 0x01, 0x75, 0x05,
+        0x81.toByte(), 0x01,
+        0x05, 0x01, 0x09, 0x30, 0x09, 0x31,
+        0x09, 0x38, 0x15, 0x81.toByte(), 0x25, 0x7F,
+        0x75, 0x08, 0x95.toByte(), 0x03,
+        0x81.toByte(), 0x06, 0xC0.toByte(), 0xC0.toByte(),
 
-        val settings = BluetoothHidDeviceAppSdpSettings(
-            "Bluetooth Mouse",
-            "Mouse Bluetooth",
-            "Bluetooth Mouse",
-            BluetoothHidDevice.SUBCLASS1_MOUSE,
-            descriptor
-        )
+        // TECLADO - RELATÓRIO 2
+        0x05, 0x01, 0x09, 0x06, 0xA1.toByte(), 0x01,
+        0x85.toByte(), 0x02,
+        0x05, 0x07, 0x19, 0xE0.toByte(),
+        0x29, 0xE7.toByte(), 0x15, 0x00, 0x25, 0x01,
+        0x75, 0x01, 0x95.toByte(), 0x08,
+        0x81.toByte(), 0x02,
+        0x95.toByte(), 0x01, 0x75, 0x08,
+        0x81.toByte(), 0x01,
+        0x95.toByte(), 0x06, 0x75, 0x08,
+        0x15, 0x00, 0x25, 0x65,
+        0x05, 0x07, 0x19, 0x00, 0x29, 0x65,
+        0x81.toByte(), 0x00,
+        0xC0.toByte()
+    )
 
-        val executor = Executor { command ->
-    runOnUiThread {
-        command.run()
-    }
-}
+    val settings = BluetoothHidDeviceAppSdpSettings(
+        "Bluetooth Mouse",
+        "Mouse e Teclado Bluetooth",
+        "Bluetooth Mouse",
+        BluetoothHidDevice.SUBCLASS1_COMBO,
+        descriptor
+    )
 
-        val registered = hidDevice?.registerApp(
-            settings,
-            null,
-            null,
-            executor,
-            hidCallback
-        ) ?: false
-
-        bluetoothStatus.value = if (registered) {
-            "Solicitação de registro enviada"
-        } else {
-            "Não foi possível registrar o mouse"
+    val executor = Executor { command ->
+        runOnUiThread {
+            command.run()
         }
     }
+
+    val registered = hidDevice?.registerApp(
+        settings,
+        null,
+        null,
+        executor,
+        hidCallback
+    ) ?: false
+
+    bluetoothStatus.value = if (registered) {
+        "Solicitação de registro enviada"
+    } else {
+        "Não foi possível registrar mouse e teclado"
+    }
+}
 
 @SuppressLint("MissingPermission")
 private fun enviarMovimento(x: Int, y: Int) {
