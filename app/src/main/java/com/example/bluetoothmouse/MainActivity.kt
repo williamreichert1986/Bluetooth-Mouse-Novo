@@ -331,6 +331,98 @@ private fun conectarDispositivo(
         bluetoothStatus.value = "Falha ao solicitar conexão"
     }
 }
+
+@SuppressLint("MissingPermission")
+private fun enviarTexto(texto: String) {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    val handler = android.os.Handler(
+        android.os.Looper.getMainLooper()
+    )
+
+    var atraso = 0L
+
+    texto.forEach { caractere ->
+
+        val tecla = when (caractere) {
+            in 'a'..'z' -> (0x04 + caractere.code - 'a'.code) to false
+            in 'A'..'Z' -> (0x04 + caractere.code - 'A'.code) to true
+
+            in '1'..'9' -> (0x1E + caractere.code - '1'.code) to false
+            '0' -> 0x27 to false
+
+            ' ' -> 0x2C to false
+            '\n', '\r' -> 0x28 to false
+
+            '!' -> 0x1E to true
+            '@' -> 0x1F to true
+            '#' -> 0x20 to true
+            '$' -> 0x21 to true
+            '%' -> 0x22 to true
+            '^' -> 0x23 to true
+            '&' -> 0x24 to true
+            '*' -> 0x25 to true
+            '(' -> 0x26 to true
+            ')' -> 0x27 to true
+
+            '-' -> 0x2D to false
+            '_' -> 0x2D to true
+            '=' -> 0x2E to false
+            '+' -> 0x2E to true
+            '[' -> 0x2F to false
+            '{' -> 0x2F to true
+            ']' -> 0x30 to false
+            '}' -> 0x30 to true
+            '\\' -> 0x31 to false
+            '|' -> 0x31 to true
+            ';' -> 0x33 to false
+            ':' -> 0x33 to true
+            '\'' -> 0x34 to false
+            '"' -> 0x34 to true
+            '`' -> 0x35 to false
+            '~' -> 0x35 to true
+            ',' -> 0x36 to false
+            '<' -> 0x36 to true
+            '.' -> 0x37 to false
+            '>' -> 0x37 to true
+            '/' -> 0x38 to false
+            '?' -> 0x38 to true
+
+            else -> null
+        }
+
+        if (tecla != null) {
+            val modificador = if (tecla.second) 0x02 else 0x00
+
+            handler.postDelayed({
+                if (mouseDevice == device && hidDevice === hid) {
+                    hid.sendReport(
+                        device,
+                        2,
+                        byteArrayOf(
+                            modificador.toByte(),
+                            0,
+                            tecla.first.toByte(),
+                            0, 0, 0, 0, 0
+                        )
+                    )
+
+                    handler.postDelayed({
+                        hid.sendReport(
+                            device,
+                            2,
+                            byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
+                        )
+                    }, 20)
+                }
+            }, atraso)
+
+            atraso += 40
+        }
+    }
+}
+
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
