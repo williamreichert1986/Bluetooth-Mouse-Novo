@@ -595,7 +595,9 @@ val view = LocalView.current
 
 LaunchedEffect(mostrarTeclado) {
     if (mostrarTeclado) {
+        kotlinx.coroutines.delay(300)
         focusRequester.requestFocus()
+        kotlinx.coroutines.delay(200)
         tecladoCelular?.show()
     }
 }
