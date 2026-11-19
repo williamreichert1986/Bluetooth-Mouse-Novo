@@ -175,14 +175,20 @@ private fun registrarMouse() {
 }
 
 @SuppressLint("MissingPermission")
-private fun enviarMovimento(x: Int, y: Int) {
+private fun enviarMovimento(x: Float, y: Float) {
     val device = mouseDevice ?: return
     val hid = hidDevice ?: return
 
 val fator = sensibilidade.intValue / 50f
 
-val movimentoX = (x * fator).toInt()
-val movimentoY = (y * fator).toInt()
+movimentoAcumuladoX += x * fator
+movimentoAcumuladoY += y * fator
+
+val movimentoX = movimentoAcumuladoX.toInt()
+val movimentoY = movimentoAcumuladoY.toInt()
+
+movimentoAcumuladoX -= movimentoX
+movimentoAcumuladoY -= movimentoY
 
     hid.sendReport(
         device,
@@ -568,7 +574,7 @@ fun MouseScreen(
     status: String,
     sensibilidade: Int,
     onSensibilidadeChange: (Int) -> Unit,
-    onMove: (Int, Int) -> Unit,
+    onMove: (Float, Float) -> Unit,
     onPressLeft: () -> Unit,
     onReleaseLeft: () -> Unit,
     onClick: () -> Unit,
@@ -706,10 +712,10 @@ Box(
                             val movimento = segundo.positionChange()
 
                             if (movimento != Offset.Zero) {
-                                onMove(
-                                    movimento.x.toInt(),
-                                    movimento.y.toInt()
-                                )
+                               onMove(
+    movimento.x,
+    movimento.y
+)
                                 segundo.consume()
                             }
                         } else {
@@ -718,10 +724,10 @@ Box(
                             if (movimento != Offset.Zero) {
                                 houveMovimento = true
 
-                                onMove(
-                                    movimento.x.toInt(),
-                                    movimento.y.toInt()
-                                )
+                               onMove(
+    movimento.x,
+    movimento.y
+)
 
                                 primeiro.consume()
                             }
