@@ -587,8 +587,18 @@ dispositivosPareados: List<android.bluetooth.BluetoothDevice>
     var mostrarDispositivos by remember { mutableStateOf(false) }
     var mostrarTeclado by remember { mutableStateOf(false) }
     var textoDigitado by remember { mutableStateOf("") }
-    
-    val view = LocalView.current
+
+    val focusRequester = remember { FocusRequester() }
+val tecladoCelular = LocalSoftwareKeyboardController.current
+
+val view = LocalView.current
+
+LaunchedEffect(mostrarTeclado) {
+    if (mostrarTeclado) {
+        focusRequester.requestFocus()
+        tecladoCelular?.show()
+    }
+}
 
 SideEffect {
     view.systemUiVisibility =
@@ -930,17 +940,19 @@ if (mostrarTeclado) {
             Text("Digitar texto")
         },
         text = {
-            OutlinedTextField(
-                value = textoDigitado,
-                onValueChange = {
-                    textoDigitado = it
-                },
-                label = {
-                    Text("Digite seu texto")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
+           OutlinedTextField(
+    value = textoDigitado,
+    onValueChange = {
+        textoDigitado = it
+    },
+    label = {
+        Text("Digite seu texto")
+    },
+    modifier = Modifier
+        .fillMaxWidth()
+        .focusRequester(focusRequester),
+    minLines = 3
+)
         },
         confirmButton = {
             TextButton(
