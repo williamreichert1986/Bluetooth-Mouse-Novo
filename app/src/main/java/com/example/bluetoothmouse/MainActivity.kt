@@ -181,24 +181,30 @@ private fun enviarMovimento(x: Float, y: Float) {
 
 val fator = sensibilidade.intValue / 50f
 
-movimentoAcumuladoX += x * fator
-movimentoAcumuladoY += y * fator
+    movimentoAcumuladoX += x * fator
+    // Inverte o eixo vertical para corrigir o sentido observado no tablet.
+    movimentoAcumuladoY += -y * fator
 
-val movimentoX = movimentoAcumuladoX.toInt()
-val movimentoY = movimentoAcumuladoY.toInt()
+    val movimentoX = movimentoAcumuladoX.toInt()
+    val movimentoY = movimentoAcumuladoY.toInt()
 
-movimentoAcumuladoX -= movimentoX
-movimentoAcumuladoY -= movimentoY
+    val enviadoX = movimentoX.coerceIn(-127, 127)
+    val enviadoY = movimentoY.coerceIn(-127, 127)
 
-  hid.sendReport(
-    device,
-    1,
-    byteArrayOf(
-        botoesPressionados.toByte(),
-        movimentoX.coerceIn(-127, 127).toByte(),
-        movimentoY.coerceIn(-127, 127).toByte()
+    movimentoAcumuladoX -= enviadoX
+    movimentoAcumuladoY -= enviadoY
+
+    if (enviadoX == 0 && enviadoY == 0) return
+
+    hid.sendReport(
+        device,
+        1,
+        byteArrayOf(
+            botoesPressionados.toByte(),
+            enviadoX.toByte(),
+            enviadoY.toByte()
+        )
     )
-)
     
 }
     
@@ -214,16 +220,18 @@ private fun enviarClique(
         android.os.Looper.getMainLooper()
     )
 
-    fun report(button: Int) {
+    fun report(buttonExtra: Int) {
         if (mouseDevice == device && hidDevice === hid) {
+            val botoes = botoesPressionados or buttonExtra
             hid.sendReport(
                 device,
                 1,
-                byteArrayOf(button.toByte(), 0, 0)
+                byteArrayOf(botoes.toByte(), 0, 0)
             )
         }
     }
 
+    // O clique é somado aos botões já segurados, sem cancelar um arraste.
     report(botao)
 
     handler.postDelayed({
@@ -627,11 +635,6 @@ SideEffect {
         .fillMaxSize()
         .padding(12.dp)
 ) {
-    Text(
-        text = status,
-        color = Color.White
-    )
-
         Slider(
         value = sensibilidade.toFloat(),
         onValueChange = {
@@ -685,60 +688,26 @@ Box(
                 )
 
                 val posicaoInicial = primeiroDedo.position.x
-                var arrastando = false
                 var houveMovimento = false
 
-                try {
-                    while (true) {
-                        val evento = awaitPointerEvent()
-
-                        val primeiro = evento.changes.firstOrNull {
-                            it.id == primeiroDedo.id
-                        }
-
-                        val segundo = evento.changes.firstOrNull {
-                            it.id != primeiroDedo.id && it.pressed
-                        }
-
-                        if (primeiro?.pressed != true) break
-
-                        if (segundo != null) {
-                            if (!arrastando) {
-                                onPressLeft()
-                                arrastando = true
-                            }
-
-                            val movimento = segundo.positionChange()
-
-                            if (movimento != Offset.Zero) {
-                               onMove(
-    movimento.x,
-    movimento.y
-)
-                                segundo.consume()
-                            }
-                        } else {
-                            val movimento = primeiro.positionChange()
-
-                            if (movimento != Offset.Zero) {
-                                houveMovimento = true
-
-                               onMove(
-    movimento.x,
-    movimento.y
-)
-
-                                primeiro.consume()
-                            }
-                        }
+                while (true) {
+                    val evento = awaitPointerEvent()
+                    val dedo = evento.changes.firstOrNull {
+                        it.id == primeiroDedo.id
                     }
-                } finally {
-                    if (arrastando) {
-                        onReleaseLeft()
+
+                    if (dedo?.pressed != true) break
+
+                    val movimento = dedo.positionChange()
+
+                    if (movimento != Offset.Zero) {
+                        houveMovimento = true
+                        onMove(movimento.x, movimento.y)
+                        dedo.consume()
                     }
                 }
 
-                if (!houveMovimento && !arrastando) {
+                if (!houveMovimento) {
                     if (posicaoInicial >= size.width * 0.75f) {
                         onRightClick()
                     } else {
@@ -771,10 +740,6 @@ Box(
                                 onDoubleClick()
                             } else {
                                 onClick()
-
-                                if (segundaPosicao >= size.width * 0.75f) {
-                                    onRightClick()
-                                }
                             }
                         }
                     }
