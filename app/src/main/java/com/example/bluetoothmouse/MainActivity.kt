@@ -513,6 +513,9 @@ private fun enviarTexto(texto: String) {
 onConnectDevice = { dispositivo ->
     conectarDispositivo(dispositivo)
 },
+onSendText = { texto ->
+    enviarTexto(texto)
+},
 dispositivosPareados = dispositivosPareados
             )
         }
