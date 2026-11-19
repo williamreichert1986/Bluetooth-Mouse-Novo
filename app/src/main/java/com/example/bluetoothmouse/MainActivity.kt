@@ -235,7 +235,33 @@ private fun soltarEsquerdo() {
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
     )
 }
+@SuppressLint("MissingPermission")
+private fun pressionarDireito() {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
 
+    botoesPressionados = botoesPressionados or 2
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
+
+@SuppressLint("MissingPermission")
+private fun soltarDireito() {
+    val device = mouseDevice ?: return
+    val hid = hidDevice ?: return
+
+    botoesPressionados = botoesPressionados and 0xFD
+
+    hid.sendReport(
+        device,
+        0,
+        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
@@ -288,32 +314,43 @@ private fun soltarEsquerdo() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-    setContent {
+        setContent {
         MouseScreen(
-    status = bluetoothStatus.value,
-    sensibilidade = sensibilidade.intValue,
-    onSensibilidadeChange = { sensibilidade.intValue = it },
-    onMove = { x, y -> enviarMovimento(x, y) },
-    onPressLeft = { pressionarEsquerdo() },
-    onReleaseLeft = { soltarEsquerdo() },
-    onClick = { enviarClique() },
-    onDoubleClick = { enviarClique(duplo = true) },
-    onRightClick = { enviarClique(botao = 2) },
-    onRightDoubleClick = {
-        enviarClique(duplo = true, botao = 2)
-    },
-    onBottomLeftClick = {
-        enviarClique()
-    },
-    onBottomRightClick = {
-        enviarClique(botao = 2)
-    }
-)
+            status = bluetoothStatus.value,
+            sensibilidade = sensibilidade.intValue,
+            onSensibilidadeChange = { sensibilidade.intValue = it },
+            onMove = { x, y -> enviarMovimento(x, y) },
+            onPressLeft = { pressionarEsquerdo() },
+            onReleaseLeft = { soltarEsquerdo() },
+            onClick = { enviarClique() },
+            onDoubleClick = { enviarClique(duplo = true) },
+            onRightClick = { enviarClique(botao = 2) },
+            onRightDoubleClick = {
+                enviarClique(duplo = true, botao = 2)
+            },
+            onBottomLeftClick = {
+                enviarClique()
+            },
+            onBottomRightClick = {
+                enviarClique(botao = 2)
+            },
+            onBottomLeftPress = {
+                pressionarEsquerdo()
+            },
+            onBottomLeftRelease = {
+                soltarEsquerdo()
+            },
+            onBottomRightPress = {
+                pressionarDireito()
+            },
+            onBottomRightRelease = {
+                soltarDireito()
+            }
+        )
     }
 
     iniciarBluetooth()
 }
-
 override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -355,7 +392,11 @@ fun MouseScreen(
     onRightClick: () -> Unit,
     onRightDoubleClick: () -> Unit,
     onBottomLeftClick: () -> Unit,
-    onBottomRightClick: () -> Unit
+    onBottomRightClick: () -> Unit,
+    onBottomLeftPress: () -> Unit,
+    onBottomLeftRelease: () -> Unit,
+    onBottomRightPress: () -> Unit,
+    onBottomRightRelease: () -> Unit
 ) {
 
     var botoesInvertidos by remember { mutableStateOf(false) }
@@ -509,6 +550,7 @@ Box(
 )
 
 
+
 // BOTÕES INFERIORES
 
 Row(
@@ -518,16 +560,31 @@ Row(
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically
 ) {
+    // BOTÃO ESQUERDO - PRESSIONAR E SEGURAR
     Surface(
         modifier = Modifier
             .weight(1f)
             .height(67.dp)
-            .clickable {
-                if (botoesInvertidos) {
-                    onBottomRightClick()
-                } else {
-                    onBottomLeftClick()
-                }
+            .pointerInput(botoesInvertidos) {
+                detectTapGestures(
+                    onPress = {
+                        if (botoesInvertidos) {
+                            onBottomRightPress()
+                        } else {
+                            onBottomLeftPress()
+                        }
+
+                        try {
+                            tryAwaitRelease()
+                        } finally {
+                            if (botoesInvertidos) {
+                                onBottomRightRelease()
+                            } else {
+                                onBottomLeftRelease()
+                            }
+                        }
+                    }
+                )
             },
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
@@ -537,6 +594,7 @@ Row(
         }
     }
 
+    // TECLADO E INVERSÃO
     Column(
         modifier = Modifier.weight(0.5f),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -573,6 +631,7 @@ Row(
         }
     }
 
+    // BOTÃO DIREITO - CLIQUE NORMAL
     Surface(
         modifier = Modifier
             .weight(1f)
