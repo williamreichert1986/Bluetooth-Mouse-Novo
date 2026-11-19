@@ -388,26 +388,32 @@ private fun carregarDispositivosPareados() {
         iniciarBluetooth()
 }
 override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(
-            requestCode,
-            permissions,
-            grantResults
-        )
+    requestCode: Int,
+    permissions: Array<String>,
+    grantResults: IntArray
+) {
+    super.onRequestPermissionsResult(
+        requestCode,
+        permissions,
+        grantResults
+    )
 
-        if (requestCode == 100 &&
+    if (requestCode == 100) {
+
+        val todasConcedidas =
             grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
+            grantResults.all {
+                it == PackageManager.PERMISSION_GRANTED
+            }
+
+        if (todasConcedidas) {
             iniciarBluetooth()
         } else {
-            bluetoothStatus.value = "Permissão Bluetooth não concedida"
+            bluetoothStatus.value =
+                "Permissões Bluetooth não concedidas"
         }
     }
-
+}
 
     override fun onDestroy() {
         hidDevice?.unregisterApp()
