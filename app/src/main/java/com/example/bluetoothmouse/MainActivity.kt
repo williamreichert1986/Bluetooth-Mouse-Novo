@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothHidDevice
 import android.bluetooth.BluetoothHidDeviceAppSdpSettings
 import android.bluetooth.BluetoothProfile
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,14 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.concurrent.Executor
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import android.view.View
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -124,32 +119,17 @@ private fun registrarMouse() {
         0x75, 0x01, 0x81.toByte(), 0x02,
         0x95.toByte(), 0x01, 0x75, 0x05,
         0x81.toByte(), 0x01,
-       0x05, 0x01, 0x09, 0x30, 0x09, 0x31,
-0x15, 0x81.toByte(), 0x25, 0x7F,
-0x75, 0x08, 0x95.toByte(), 0x02,
-0x81.toByte(), 0x06, 0xC0.toByte(), 0xC0.toByte(),
-
-        // TECLADO - RELATÓRIO 2
-        0x05, 0x01, 0x09, 0x06, 0xA1.toByte(), 0x01,
-        0x85.toByte(), 0x02,
-        0x05, 0x07, 0x19, 0xE0.toByte(),
-        0x29, 0xE7.toByte(), 0x15, 0x00, 0x25, 0x01,
-        0x75, 0x01, 0x95.toByte(), 0x08,
-        0x81.toByte(), 0x02,
-        0x95.toByte(), 0x01, 0x75, 0x08,
-        0x81.toByte(), 0x01,
-        0x95.toByte(), 0x06, 0x75, 0x08,
-        0x15, 0x00, 0x25, 0x65,
-        0x05, 0x07, 0x19, 0x00, 0x29, 0x65,
-        0x81.toByte(), 0x00,
-        0xC0.toByte()
+        0x05, 0x01, 0x09, 0x30, 0x09, 0x31,
+        0x15, 0x81.toByte(), 0x25, 0x7F,
+        0x75, 0x08, 0x95.toByte(), 0x02,
+        0x81.toByte(), 0x06, 0xC0.toByte(), 0xC0.toByte()
     )
 
     val settings = BluetoothHidDeviceAppSdpSettings(
         "Bluetooth Mouse",
-        "Mouse e Teclado Bluetooth",
+        "Mouse Bluetooth",
         "Bluetooth Mouse",
-        BluetoothHidDevice.SUBCLASS1_COMBO,
+        BluetoothHidDevice.SUBCLASS1_MOUSE,
         descriptor
     )
 
@@ -170,7 +150,7 @@ private fun registrarMouse() {
     bluetoothStatus.value = if (registered) {
         "Solicitação de registro enviada"
     } else {
-        "Não foi possível registrar mouse e teclado"
+        "Não foi possível registrar o mouse"
     }
 }
 
@@ -352,97 +332,6 @@ private fun conectarDispositivo(
     }
 }
 
-@SuppressLint("MissingPermission")
-private fun enviarTexto(texto: String) {
-    val device = mouseDevice ?: return
-    val hid = hidDevice ?: return
-
-    val handler = android.os.Handler(
-        android.os.Looper.getMainLooper()
-    )
-
-    var atraso = 0L
-
-    texto.forEach { caractere ->
-
-        val tecla = when (caractere) {
-            in 'a'..'z' -> (0x04 + caractere.code - 'a'.code) to false
-            in 'A'..'Z' -> (0x04 + caractere.code - 'A'.code) to true
-
-            in '1'..'9' -> (0x1E + caractere.code - '1'.code) to false
-            '0' -> 0x27 to false
-
-            ' ' -> 0x2C to false
-            '\n', '\r' -> 0x28 to false
-
-            '!' -> 0x1E to true
-            '@' -> 0x1F to true
-            '#' -> 0x20 to true
-            '$' -> 0x21 to true
-            '%' -> 0x22 to true
-            '^' -> 0x23 to true
-            '&' -> 0x24 to true
-            '*' -> 0x25 to true
-            '(' -> 0x26 to true
-            ')' -> 0x27 to true
-
-            '-' -> 0x2D to false
-            '_' -> 0x2D to true
-            '=' -> 0x2E to false
-            '+' -> 0x2E to true
-            '[' -> 0x2F to false
-            '{' -> 0x2F to true
-            ']' -> 0x30 to false
-            '}' -> 0x30 to true
-            '\\' -> 0x31 to false
-            '|' -> 0x31 to true
-            ';' -> 0x33 to false
-            ':' -> 0x33 to true
-            '\'' -> 0x34 to false
-            '"' -> 0x34 to true
-            '`' -> 0x35 to false
-            '~' -> 0x35 to true
-            ',' -> 0x36 to false
-            '<' -> 0x36 to true
-            '.' -> 0x37 to false
-            '>' -> 0x37 to true
-            '/' -> 0x38 to false
-            '?' -> 0x38 to true
-
-            else -> null
-        }
-
-        if (tecla != null) {
-            val modificador = if (tecla.second) 0x02 else 0x00
-
-            handler.postDelayed({
-                if (mouseDevice == device && hidDevice === hid) {
-                    hid.sendReport(
-                        device,
-                        2,
-                        byteArrayOf(
-                            modificador.toByte(),
-                            0,
-                            tecla.first.toByte(),
-                            0, 0, 0, 0, 0
-                        )
-                    )
-
-                    handler.postDelayed({
-                        hid.sendReport(
-                            device,
-                            2,
-                            byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0)
-                        )
-                    }, 20)
-                }
-            }, atraso)
-
-            atraso += 40
-        }
-    }
-}
-
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
@@ -495,48 +384,23 @@ private fun enviarTexto(texto: String) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-               setContent {
+        setContent {
             MouseScreen(
-                status = bluetoothStatus.value,
                 sensibilidade = sensibilidade.intValue,
                 onSensibilidadeChange = { sensibilidade.intValue = it },
                 onMove = { x, y -> enviarMovimento(x, y) },
-                onPressLeft = { pressionarEsquerdo() },
-                onReleaseLeft = { soltarEsquerdo() },
                 onClick = { enviarClique() },
                 onDoubleClick = { enviarClique(duplo = true) },
                 onRightClick = { enviarClique(botao = 2) },
-                onRightDoubleClick = {
-                    enviarClique(duplo = true, botao = 2)
+                onBottomLeftPress = { pressionarEsquerdo() },
+                onBottomLeftRelease = { soltarEsquerdo() },
+                onBottomRightPress = { pressionarDireito() },
+                onBottomRightRelease = { soltarDireito() },
+                onLoadPairedDevices = { carregarDispositivosPareados() },
+                onConnectDevice = { dispositivo ->
+                    conectarDispositivo(dispositivo)
                 },
-                onBottomLeftClick = {
-                    enviarClique()
-                },
-                onBottomRightClick = {
-                    enviarClique(botao = 2)
-                },
-                onBottomLeftPress = {
-                    pressionarEsquerdo()
-                },
-                onBottomLeftRelease = {
-                    soltarEsquerdo()
-                },
-                onBottomRightPress = {
-                    pressionarDireito()
-                },
-                               onBottomRightRelease = {
-                    soltarDireito()
-                },
-               onLoadPairedDevices = {
-    carregarDispositivosPareados()
-},
-onConnectDevice = { dispositivo ->
-    conectarDispositivo(dispositivo)
-},
-onSendText = { texto ->
-    enviarTexto(texto)
-},
-dispositivosPareados = dispositivosPareados
+                dispositivosPareados = dispositivosPareados
             )
         }
 
@@ -556,9 +420,19 @@ override fun onRequestPermissionsResult(
     if (requestCode == 100) {
 
         val todasConcedidas =
-            grantResults.isNotEmpty() &&
-            grantResults.all {
-                it == PackageManager.PERMISSION_GRANTED
+            Build.VERSION.SDK_INT < 31 ||
+            run {
+                val indiceConnect =
+                    permissions.indexOf(Manifest.permission.BLUETOOTH_CONNECT)
+                val indiceAdvertise =
+                    permissions.indexOf(Manifest.permission.BLUETOOTH_ADVERTISE)
+
+                indiceConnect >= 0 &&
+                    indiceAdvertise >= 0 &&
+                    grantResults.getOrNull(indiceConnect) ==
+                        PackageManager.PERMISSION_GRANTED &&
+                    grantResults.getOrNull(indiceAdvertise) ==
+                        PackageManager.PERMISSION_GRANTED
             }
 
         if (todasConcedidas) {
@@ -570,54 +444,41 @@ override fun onRequestPermissionsResult(
     }
 }
 
+    @SuppressLint("MissingPermission")
     override fun onDestroy() {
         hidDevice?.unregisterApp()
+        hidDevice?.let { proxy ->
+            BluetoothAdapter.getDefaultAdapter()?.closeProfileProxy(
+                BluetoothProfile.HID_DEVICE,
+                proxy
+            )
+        }
+        hidDevice = null
+        mouseDevice = null
         super.onDestroy()
     }
 }
 
 @Composable
 fun MouseScreen(
-    status: String,
     sensibilidade: Int,
     onSensibilidadeChange: (Int) -> Unit,
     onMove: (Float, Float) -> Unit,
-    onPressLeft: () -> Unit,
-    onReleaseLeft: () -> Unit,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit,
     onRightClick: () -> Unit,
-    onRightDoubleClick: () -> Unit,
-    onBottomLeftClick: () -> Unit,
-    onBottomRightClick: () -> Unit,
     onBottomLeftPress: () -> Unit,
     onBottomLeftRelease: () -> Unit,
     onBottomRightPress: () -> Unit,
-        onBottomRightRelease: () -> Unit,
+    onBottomRightRelease: () -> Unit,
     onLoadPairedDevices: () -> Unit,
-onConnectDevice: (android.bluetooth.BluetoothDevice) -> Unit,
-onSendText: (String) -> Unit,
-dispositivosPareados: List<android.bluetooth.BluetoothDevice>
+    onConnectDevice: (android.bluetooth.BluetoothDevice) -> Unit,
+    dispositivosPareados: List<android.bluetooth.BluetoothDevice>
 ) {
-
     var botoesInvertidos by remember { mutableStateOf(false) }
     var mostrarDispositivos by remember { mutableStateOf(false) }
-    var mostrarTeclado by remember { mutableStateOf(false) }
-    var textoDigitado by remember { mutableStateOf("") }
 
-    val focusRequester = remember { FocusRequester() }
-val tecladoCelular = LocalSoftwareKeyboardController.current
-
-val view = LocalView.current
-
-LaunchedEffect(mostrarTeclado) {
-    if (mostrarTeclado) {
-        kotlinx.coroutines.delay(300)
-        focusRequester.requestFocus()
-        kotlinx.coroutines.delay(200)
-        tecladoCelular?.show()
-    }
-}
+    val view = LocalView.current
 
 SideEffect {
     view.systemUiVisibility =
@@ -734,10 +595,13 @@ Box(
                                 }
                             }
 
-                            if (!segundoMoveu &&
-                                segundaPosicao < size.width * 0.75f
-                            ) {
-                                onDoubleClick()
+                            if (!segundoMoveu) {
+                                if (segundaPosicao < size.width * 0.75f) {
+                                    onDoubleClick()
+                                } else {
+                                    onClick()
+                                    onRightClick()
+                                }
                             } else {
                                 onClick()
                             }
@@ -763,7 +627,7 @@ Row(
     Surface(
         modifier = Modifier
             .weight(1f)
-            .height(67.dp)
+            .height(94.dp)
             .pointerInput(botoesInvertidos) {
                 detectTapGestures(
                     onPress = {
@@ -793,31 +657,15 @@ Row(
         }
     }
 
-    // TECLADO E INVERSÃO
-    Column(
+    // BOTÃO DE INVERSÃO
+    Box(
         modifier = Modifier.weight(0.5f),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-       Surface(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(34.dp)
-        .clickable {
-            mostrarTeclado = true
-        },
-    shape = RoundedCornerShape(8.dp),
-    color = Color(0xFF80CBC4)
-) {
-    Box(contentAlignment = Alignment.Center) {
-        Text("⌨", color = Color.Black)
-    }
-}
-
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(34.dp)
+                .height(40.dp)
                 .clickable {
                     botoesInvertidos = !botoesInvertidos
                 },
@@ -830,18 +678,31 @@ Row(
         }
     }
 
-    
-    // BOTÃO DIREITO - CLIQUE NORMAL
+    // BOTÃO DIREITO - PRESSIONAR E SEGURAR
     Surface(
         modifier = Modifier
             .weight(1f)
-            .height(67.dp)
-            .clickable {
-                if (botoesInvertidos) {
-                    onBottomLeftClick()
-                } else {
-                    onBottomRightClick()
-                }
+            .height(94.dp)
+            .pointerInput(botoesInvertidos) {
+                detectTapGestures(
+                    onPress = {
+                        if (botoesInvertidos) {
+                            onBottomLeftPress()
+                        } else {
+                            onBottomRightPress()
+                        }
+
+                        try {
+                            tryAwaitRelease()
+                        } finally {
+                            if (botoesInvertidos) {
+                                onBottomLeftRelease()
+                            } else {
+                                onBottomRightRelease()
+                            }
+                        }
+                    }
+                )
             },
         shape = RoundedCornerShape(10.dp),
         color = Color(0xFF405565)
@@ -902,52 +763,6 @@ if (mostrarDispositivos) {
                 }
             ) {
                 Text("Fechar")
-            }
-        }
-    )
-}
-// JANELA DE DIGITAÇÃO
-if (mostrarTeclado) {
-    AlertDialog(
-        onDismissRequest = {
-            mostrarTeclado = false
-        },
-        title = {
-            Text("Digitar texto")
-        },
-        text = {
-           OutlinedTextField(
-    value = textoDigitado,
-    onValueChange = {
-        textoDigitado = it
-    },
-    label = {
-        Text("Digite seu texto")
-    },
-    modifier = Modifier
-        .fillMaxWidth()
-        .focusRequester(focusRequester),
-    minLines = 3
-)
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onSendText(textoDigitado)
-                    textoDigitado = ""
-                    mostrarTeclado = false
-                }
-            ) {
-                Text("Enviar")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    mostrarTeclado = false
-                }
-            ) {
-                Text("Cancelar")
             }
         }
     )
