@@ -917,6 +917,50 @@ if (mostrarDispositivos) {
         }
     )
 }
+// JANELA DE DIGITAÇÃO
+if (mostrarTeclado) {
+    AlertDialog(
+        onDismissRequest = {
+            mostrarTeclado = false
+        },
+        title = {
+            Text("Digitar texto")
+        },
+        text = {
+            OutlinedTextField(
+                value = textoDigitado,
+                onValueChange = {
+                    textoDigitado = it
+                },
+                label = {
+                    Text("Digite seu texto")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSendText(textoDigitado)
+                    textoDigitado = ""
+                    mostrarTeclado = false
+                }
+            ) {
+                Text("Enviar")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    mostrarTeclado = false
+                }
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
     }
 }
 }
