@@ -810,20 +810,20 @@ Row(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(34.dp)
-                .clickable {
-                    // Ação do teclado será adicionada depois
-                },
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFF80CBC4)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("⌨", color = Color.Black)
-            }
-        }
+       Surface(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(34.dp)
+        .clickable {
+            mostrarTeclado = true
+        },
+    shape = RoundedCornerShape(8.dp),
+    color = Color(0xFF80CBC4)
+) {
+    Box(contentAlignment = Alignment.Center) {
+        Text("⌨", color = Color.Black)
+    }
+}
 
         Surface(
             modifier = Modifier
