@@ -238,7 +238,7 @@ private fun pressionarEsquerdo() {
 
     hid.sendReport(
         device,
-        0,
+        1,
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
     )
 }
@@ -252,7 +252,7 @@ private fun soltarEsquerdo() {
 
     hid.sendReport(
         device,
-        0,
+        1,
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
     )
 }
@@ -265,7 +265,7 @@ private fun soltarDireito() {
 
     hid.sendReport(
         device,
-        0,
+        1,
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
     )
 }
@@ -279,7 +279,7 @@ private fun pressionarDireito() {
 
     hid.sendReport(
         device,
-        0,
+        1,
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
     )
 }
