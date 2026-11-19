@@ -397,10 +397,13 @@ private fun conectarDispositivo(
                                onBottomRightRelease = {
                     soltarDireito()
                 },
-                onLoadPairedDevices = {
-                    carregarDispositivosPareados()
-                },
-                dispositivosPareados = dispositivosPareados
+               onLoadPairedDevices = {
+    carregarDispositivosPareados()
+},
+onConnectDevice = { dispositivo ->
+    conectarDispositivo(dispositivo)
+},
+dispositivosPareados = dispositivosPareados
             )
         }
 
@@ -765,8 +768,9 @@ if (mostrarDispositivos) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    // Conexão será adicionada depois
-                                }
+    onConnectDevice(dispositivo)
+    mostrarDispositivos = false
+}
                                 .padding(vertical = 10.dp),
                             color = Color.White
                         )
