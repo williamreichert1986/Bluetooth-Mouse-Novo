@@ -179,7 +179,7 @@ val fator = sensibilidade.intValue / 50f
 
     hid.sendReport(
         device,
-        0,
+        1,
         byteArrayOf(
             botoesPressionados.toByte(),
             movimentoX.coerceIn(-127, 127).toByte(),
