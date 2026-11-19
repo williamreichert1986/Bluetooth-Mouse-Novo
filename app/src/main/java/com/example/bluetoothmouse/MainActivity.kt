@@ -294,6 +294,25 @@ private fun carregarDispositivosPareados() {
         }
     )
 }
+@SuppressLint("MissingPermission")
+private fun conectarDispositivo(
+    dispositivo: android.bluetooth.BluetoothDevice
+) {
+    val hid = hidDevice
+
+    if (hid == null) {
+        bluetoothStatus.value = "Serviço HID indisponível"
+        return
+    }
+
+    bluetoothStatus.value = "Solicitando conexão..."
+
+    val solicitado = hid.connect(dispositivo)
+
+    if (!solicitado) {
+        bluetoothStatus.value = "Falha ao solicitar conexão"
+    }
+}
     @SuppressLint("MissingPermission")
     private fun iniciarBluetooth() {
         if (Build.VERSION.SDK_INT >= 31) {
@@ -438,8 +457,9 @@ fun MouseScreen(
     onBottomLeftPress: () -> Unit,
     onBottomLeftRelease: () -> Unit,
     onBottomRightPress: () -> Unit,
-    onBottomRightRelease: () -> Unit,
+        onBottomRightRelease: () -> Unit,
     onLoadPairedDevices: () -> Unit,
+    onConnectDevice: (android.bluetooth.BluetoothDevice) -> Unit,
     dispositivosPareados: List<android.bluetooth.BluetoothDevice>
 ) {
 
