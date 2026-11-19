@@ -42,10 +42,13 @@ class MainActivity : ComponentActivity() {
 
     private var mouseDevice: android.bluetooth.BluetoothDevice? = null
 
-private var botoesPressionados = 0
+    private val dispositivosPareados =
+        mutableStateListOf<android.bluetooth.BluetoothDevice>()
 
-private val sensibilidade = mutableIntStateOf(50)
-    
+    private var botoesPressionados = 0
+
+    private val sensibilidade = mutableIntStateOf(50)
+
     private var bluetoothStatus = mutableStateOf("Preparando Bluetooth...")
 
     private val hidCallback = object : BluetoothHidDevice.Callback() {
@@ -236,20 +239,6 @@ private fun soltarEsquerdo() {
     )
 }
 @SuppressLint("MissingPermission")
-private fun pressionarDireito() {
-    val device = mouseDevice ?: return
-    val hid = hidDevice ?: return
-
-    botoesPressionados = botoesPressionados or 2
-
-    hid.sendReport(
-        device,
-        0,
-        byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
-    )
-}
-
-@SuppressLint("MissingPermission")
 private fun soltarDireito() {
     val device = mouseDevice ?: return
     val hid = hidDevice ?: return
@@ -260,6 +249,35 @@ private fun soltarDireito() {
         device,
         0,
         byteArrayOf(botoesPressionados.toByte(), 0, 0, 0)
+    )
+}
+
+@SuppressLint("MissingPermission")
+private fun carregarDispositivosPareados() {
+
+    val adapter = BluetoothAdapter.getDefaultAdapter()
+        ?: return
+
+    if (Build.VERSION.SDK_INT >= 31 &&
+        checkSelfPermission(
+            Manifest.permission.BLUETOOTH_CONNECT
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        bluetoothStatus.value = "Permissão Bluetooth necessária"
+        return
+    }
+
+    if (!adapter.isEnabled) {
+        bluetoothStatus.value = "Ative o Bluetooth"
+        return
+    }
+
+    dispositivosPareados.clear()
+
+    dispositivosPareados.addAll(
+        adapter.bondedDevices.sortedBy {
+            it.name ?: it.address
+        }
     )
 }
     @SuppressLint("MissingPermission")
@@ -314,42 +332,46 @@ private fun soltarDireito() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent {
-        MouseScreen(
-            status = bluetoothStatus.value,
-            sensibilidade = sensibilidade.intValue,
-            onSensibilidadeChange = { sensibilidade.intValue = it },
-            onMove = { x, y -> enviarMovimento(x, y) },
-            onPressLeft = { pressionarEsquerdo() },
-            onReleaseLeft = { soltarEsquerdo() },
-            onClick = { enviarClique() },
-            onDoubleClick = { enviarClique(duplo = true) },
-            onRightClick = { enviarClique(botao = 2) },
-            onRightDoubleClick = {
-                enviarClique(duplo = true, botao = 2)
-            },
-            onBottomLeftClick = {
-                enviarClique()
-            },
-            onBottomRightClick = {
-                enviarClique(botao = 2)
-            },
-            onBottomLeftPress = {
-                pressionarEsquerdo()
-            },
-            onBottomLeftRelease = {
-                soltarEsquerdo()
-            },
-            onBottomRightPress = {
-                pressionarDireito()
-            },
-            onBottomRightRelease = {
-                soltarDireito()
-            }
-        )
-    }
+               setContent {
+            MouseScreen(
+                status = bluetoothStatus.value,
+                sensibilidade = sensibilidade.intValue,
+                onSensibilidadeChange = { sensibilidade.intValue = it },
+                onMove = { x, y -> enviarMovimento(x, y) },
+                onPressLeft = { pressionarEsquerdo() },
+                onReleaseLeft = { soltarEsquerdo() },
+                onClick = { enviarClique() },
+                onDoubleClick = { enviarClique(duplo = true) },
+                onRightClick = { enviarClique(botao = 2) },
+                onRightDoubleClick = {
+                    enviarClique(duplo = true, botao = 2)
+                },
+                onBottomLeftClick = {
+                    enviarClique()
+                },
+                onBottomRightClick = {
+                    enviarClique(botao = 2)
+                },
+                onBottomLeftPress = {
+                    pressionarEsquerdo()
+                },
+                onBottomLeftRelease = {
+                    soltarEsquerdo()
+                },
+                onBottomRightPress = {
+                    pressionarDireito()
+                },
+                               onBottomRightRelease = {
+                    soltarDireito()
+                },
+                onLoadPairedDevices = {
+                    carregarDispositivosPareados()
+                },
+                dispositivosPareados = dispositivosPareados
+            )
+        }
 
-    iniciarBluetooth()
+        iniciarBluetooth()
 }
 override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -396,10 +418,13 @@ fun MouseScreen(
     onBottomLeftPress: () -> Unit,
     onBottomLeftRelease: () -> Unit,
     onBottomRightPress: () -> Unit,
-    onBottomRightRelease: () -> Unit
+    onBottomRightRelease: () -> Unit,
+    onLoadPairedDevices: () -> Unit,
+    dispositivosPareados: List<android.bluetooth.BluetoothDevice>
 ) {
 
     var botoesInvertidos by remember { mutableStateOf(false) }
+    var mostrarDispositivos by remember { mutableStateOf(false) }
     val view = LocalView.current
 
 SideEffect {
@@ -423,18 +448,43 @@ SideEffect {
         color = Color.White
     )
 
-    Slider(
-    value = sensibilidade.toFloat(),
-    onValueChange = {
-        onSensibilidadeChange(it.toInt())
-    },
-    valueRange = 1f..100f,
-    modifier = Modifier.height(28.dp)
-)
+        Slider(
+        value = sensibilidade.toFloat(),
+        onValueChange = {
+            onSensibilidadeChange(it.toInt())
+        },
+        valueRange = 1f..100f,
+        modifier = Modifier.height(28.dp)
+    )
 
-Spacer(Modifier.height(8.dp))
+    // BOTÃO BLUETOOTH
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+               Surface(
+            modifier = Modifier
+                .size(42.dp)
+                .clickable {
+                    onLoadPairedDevices()
+                    mostrarDispositivos = true
+                },
+            shape = RoundedCornerShape(8.dp),
+            color = Color(0xFF80CBC4)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    "ᛒ",
+                    color = Color.Black,
+                    fontSize = 26.sp
+                )
+            }
+        }
+    }
 
-         
+    Spacer(Modifier.height(8.dp))
 
 Box(
     modifier = Modifier
@@ -631,6 +681,7 @@ Row(
         }
     }
 
+    
     // BOTÃO DIREITO - CLIQUE NORMAL
     Surface(
         modifier = Modifier
@@ -651,6 +702,60 @@ Row(
         }
     }
 }
+
+// JANELA DE DISPOSITIVOS BLUETOOTH
+if (mostrarDispositivos) {
+    AlertDialog(
+        onDismissRequest = {
+            mostrarDispositivos = false
+        },
+        title = {
+            Text("Dispositivos pareados")
+        },
+        text = {
+            if (dispositivosPareados.isEmpty()) {
+                Text("Nenhum dispositivo pareado encontrado.")
+            } else {
+                Column(
+                    modifier = Modifier.heightIn(max = 300.dp)
+                ) {
+                    dispositivosPareados.forEach { dispositivo ->
+                        Text(
+                            text = "${dispositivo.name ?: "Sem nome"}\n${dispositivo.address}",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // Conexão será adicionada depois
+                                }
+                                .padding(vertical = 10.dp),
+                            color = Color.White
+                        )
+
+                        HorizontalDivider()
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onLoadPairedDevices()
+                }
+            ) {
+                Text("Atualizar")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    mostrarDispositivos = false
+                }
+            ) {
+                Text("Fechar")
+            }
+        }
+    )
 }
+    }
 }
 }
