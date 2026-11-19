@@ -219,7 +219,7 @@ private fun enviarClique(
             hid.sendReport(
                 device,
                 1,
-                byteArrayOf(button.toByte(), 0, 0, 0)
+                byteArrayOf(button.toByte(), 0, 0)
             )
         }
     }
