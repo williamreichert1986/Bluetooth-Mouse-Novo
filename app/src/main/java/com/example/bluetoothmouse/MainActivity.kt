@@ -575,8 +575,9 @@ fun MouseScreen(
     onBottomRightPress: () -> Unit,
         onBottomRightRelease: () -> Unit,
     onLoadPairedDevices: () -> Unit,
-    onConnectDevice: (android.bluetooth.BluetoothDevice) -> Unit,
-    dispositivosPareados: List<android.bluetooth.BluetoothDevice>
+onConnectDevice: (android.bluetooth.BluetoothDevice) -> Unit,
+onSendText: (String) -> Unit,
+dispositivosPareados: List<android.bluetooth.BluetoothDevice>
 ) {
 
     var botoesInvertidos by remember { mutableStateOf(false) }
